@@ -17,7 +17,7 @@ from nonebot.adapters.onebot.v11 import (
 from typing import List, Optional, Type, Tuple, Dict
 from nonebot.log import logger
 from nonebot.params import Depends
-from .data_source import yishijie, huoqu, send_forward_msg, get_taskId, get_token, get_img
+from .data_source import yishijie, huoqu, send_forward_msg, get_taskId, get_token, get_img,current_path
 from nonebot_plugin_imageutils import (Text2Image, text2image, BuildImage)
 from io import BytesIO
 from .utils import UserInfo
@@ -71,7 +71,7 @@ from nonebot.adapters.onebot.v11.helpers import HandleCancellation
 #    "抽老婆", aliases={"抽老婆"}, priority=5, block=True
 # )
 
-with open("User Illust.txt", "r", encoding="utf-8") as f:
+with open(current_path+"User Illust.txt", "r", encoding="utf-8") as f:
     lines = f.read().splitlines()[1:-1]    # 读取文件内容并去除首尾空行
     梦夏urls = list(filter(bool, lines))       # 过滤掉空行，并转为list
 
