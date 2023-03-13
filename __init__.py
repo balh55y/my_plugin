@@ -12,7 +12,6 @@ import shlex
 import re
 import json
 import random
-from .梦夏 import 梦夏ls
 from nonebot.adapters.onebot.v11 import (
     Bot, Message, MessageEvent, MessageSegment, GroupMessageEvent, unescape, PokeNotifyEvent)
 from typing import List, Optional, Type, Tuple, Dict
@@ -94,6 +93,10 @@ from nonebot.adapters.onebot.v11.helpers import HandleCancellation
 # chou = on_command(
 #    "抽老婆", aliases={"抽老婆"}, priority=5, block=True
 # )
+
+with open("User Illust.txt", "r", encoding="utf-8") as f:
+    lines = f.read().splitlines()[1:-1]    # 读取文件内容并去除首尾空行
+    梦夏urls = list(filter(bool, lines))       # 过滤掉空行，并转为list
 
 壁纸 = on_command("来张壁纸", priority=20)
 
@@ -203,7 +206,7 @@ async def _():
 @梦夏.handle()
 async def _():
     try:
-        await 梦夏.send(MessageSegment.image(file=random.choice(梦夏ls)))
+        await 梦夏.send(MessageSegment.image(file=random.choice(梦夏urls)))
     except Exception as e:
         logger.warning(e)
         await 梦夏.send("出错了:\n"+e)
