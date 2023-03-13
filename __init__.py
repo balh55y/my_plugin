@@ -24,29 +24,6 @@ from .utils import UserInfo
 from nonebot.adapters.onebot.v11.helpers import HandleCancellation
 #from nonebot_plugin_txt2img import Txt2Img
 
-
-# __zx_plugin_name__ = "shindan"
-# __plugin_usage__ = """
-# usage：
-#     来测测你是什么样的人
-#     指令:
-#         今天是什么少女[@xxx]
-#         异世界转生[@xxx]
-#         卖萌[@xxx]
-#         抽老婆[@xxx]
-# """.strip()
-# __plugin_des__ = "基于 https://shindanmaker.com 的测定小功能"
-# __plugin_cmd__ = ["今天是什么少女", "异世界转生", "卖萌", "抽老婆"]
-# __plugin_type__ = ("群内小游戏",)
-# __plugin_version__ = 0.1
-# __plugin_author__ = "ZeroBot-Plugin"
-# __plugin_settings__ = {
-#     "level": 5,
-#     "default_status": True,
-#     "limit_superuser": False,
-#     "cmd": ["今天是什么少女", "异世界转生", "卖萌", "抽老婆"],
-# }
-
 # yishi = on_command(
 #     "异世界转生", aliases={"异世界转生"}, priority=5, block=True
 # )
