@@ -1,8 +1,12 @@
 import httpx
 import re
 import requests
+import asyncio
 from pathlib import Path
-from .depends import *
+from typing import List
+from nonebot.adapters.onebot.v11 import (
+    Bot, Message, MessageEvent, MessageSegment, GroupMessageEvent, unescape, PokeNotifyEvent)
+# from .depends import *
 
 url = 'https://shindanmaker.com/'
 
@@ -151,3 +155,47 @@ async def laopo(id):
         str(re.compile(
             r'_wct『(.*?)&#10;#shindanmaker&ensp').findall(r.text)[0])
     return text, lur, lao
+
+
+# 获取绘画的结果
+async def get_img(access_token, taskId):
+    url = "https://wenxin.baidu.com/younger/portal/api/rest/1.0/ernievilg/v1/getImg?from=baicai"
+    payload = {
+        'access_token': access_token,
+        'taskId': taskId
+    }  # 请求参数，taskId是绘画的任务id
+    async with httpx.AsyncClient(verify=False, timeout=None) as client:
+        resp = await client.post(url, data=payload)
+        data = resp.json()
+        print(data)
+        if data['code'] == 0:  # 请求成功
+            if data['data']['status'] == 1:  # status为1，表明绘画完成
+                return [MessageSegment.image(file=imgurl["image"]) for imgurl in data['data']['imgUrls']]
+            else:
+                # 5s后再次请求
+                await asyncio.sleep(5)
+                return await get_img(access_token, taskId)
+
+        print(f'绘画任务失败,返回msg: {data["msg"]}')  # 请求失败的消息提示
+        return None
+
+
+async def send_forward_msg(
+    bot: Bot,
+    event: MessageEvent,
+    name: str,
+    uin: str,
+    msgs: List[Message],
+) -> dict:
+    def to_json(msg: Message):
+        return {"type": "node", "data": {"name": name, "uin": uin, "content": msg}}
+
+    messages = [to_json(msg) for msg in msgs]
+    if isinstance(event, GroupMessageEvent):
+        return await bot.call_api(
+            "send_group_forward_msg", group_id=event.group_id, messages=messages
+        )
+    else:
+        return await bot.call_api(
+            "send_private_forward_msg", user_id=event.user_id, messages=messages
+        )

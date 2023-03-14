@@ -17,7 +17,7 @@ from nonebot.adapters.onebot.v11 import (
 from typing import List, Optional, Type, Tuple, Dict
 from nonebot.log import logger
 from nonebot.params import Depends
-from .data_source import yishijie, huoqu, send_forward_msg, get_taskId, get_token, get_img,current_path
+from .data_source import yishijie, huoqu, send_forward_msg, current_path
 from nonebot_plugin_imageutils import (Text2Image, text2image, BuildImage)
 from io import BytesIO
 from .utils import UserInfo
@@ -124,12 +124,23 @@ async def _(matcher:Matcher,args:Message=CommandArg()):
 
 
 @send_img.handle()
-async def _(arg: Message = CommandArg()):
+async def _(bot: Bot,event: MessageEvent,arg: Message = CommandArg()):
     text = arg.extract_plain_text().strip()
-    try:
-        await send_img.send(MessageSegment.image(file=text))
-    except Exception as e:
-        logger.warning(e)
+    pattern = r"https://i\.pximg\.net/img-original/img/\d+/\d+/\d+/\d+/\d+/\d+/"
+    if text:
+        if re.search(pattern, text):
+            new_url = text.replace("i.pximg.net", "pixiv.balh5.workers.dev")
+            try:
+                await send_forward_msg(bot, event, "学渣", bot.self_id, [MessageSegment.image(file=new_url)])
+            except Exception as e:
+                logger.warning(e)
+        else:
+            try:
+                await send_img.send(MessageSegment.image(file=text))
+            except Exception as e:
+                logger.warning(e)
+
+
 
 
 @call_api.handle()
