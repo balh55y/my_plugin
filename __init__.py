@@ -103,6 +103,16 @@ def _check(event: PokeNotifyEvent):
 
 渣男 = on_command("渣男语录", priority=20)
 
+biang = on_command("biang", priority=20)
+
+@biang.handle()
+async def _(bot: Bot,event: MessageEvent,args: Message = CommandArg()):
+    text = args.extract_plain_text().strip()
+    text = text.replace(" ","+")
+    try:
+        await biang.send(str(eval(text)/1000))
+    except Exception as e:
+        logger.warning(str(e))
 
 
 @小作文.handle()
