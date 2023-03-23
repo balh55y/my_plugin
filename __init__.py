@@ -137,11 +137,19 @@ async def _(matcher:Matcher,args:Message=CommandArg()):
 async def _(bot: Bot,event: MessageEvent,arg: Message = CommandArg()):
     text = arg.extract_plain_text().strip()
     pattern = r"https://i\.pximg\.net/img-original/img/\d+/\d+/\d+/\d+/\d+/\d+/"
+    pixiv_re = r"^https:\/\/www\.pixiv\.net\/artworks\/(\d+)$"
     if text:
         if re.search(pattern, text):
             new_url = text.replace("i.pximg.net", "pixiv.balh5.workers.dev")
             try:
                 await send_forward_msg(bot, event, "学渣", bot.self_id, [MessageSegment.image(file=new_url)])
+            except Exception as e:
+                logger.warning(e)
+        elif pid := re.search(pixiv_re, text).group(1):
+            try:
+                url_list = await get_pixivimg_url(pid)
+                if url_list:
+                    await send_forward_msg(bot, event, "学渣", bot.self_id, [MessageSegment.image(file=i.replace("i.pximg.net", "pixiv.balh5.workers.dev")) for i in url_list])
             except Exception as e:
                 logger.warning(e)
         else:
@@ -272,6 +280,18 @@ async def _(bot: Bot, event: PokeNotifyEvent):
             await bot.send_private_msg(user_id=event.user_id,message=msg)
     except Exception as e:
         print('未知错误 %s' % e)
+
+async def get_pixivimg_url(pid:int):
+    url = f"https://api.obfs.dev/api/pixiv/illust?id={pid}"
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url)
+        js = json.loads(resp.text)
+        if page := js["illust"]["page_count"]:
+            if page > 1:
+                return [i["image_urls"]["original"] for i in js["illust"]["meta_pages"]]
+            elif page == 0:
+                return [js["illust"]["meta_single_page"]["original_image_url"]]
+
 
 
 def userinfo(event: MessageEvent):
