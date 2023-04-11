@@ -1,7 +1,13 @@
 from ast import Try
-from nonebot import on_command, on_regex, on_endswith, on_notice
+import datetime
+from nonebot import on_command, on_fullmatch, on_regex, on_endswith, on_notice
 from nonebot.params import CommandArg, EventPlainText, RegexMatched
 from nonebot.typing import T_State
+from nonebot import require
+require("nonebot_plugin_htmlrender")
+from nonebot_plugin_htmlrender import (
+    template_to_pic
+)
 from nonebot.matcher import Matcher
 from nonebot.utils import run_sync
 from nonebot.permission import SUPERUSER
@@ -16,11 +22,12 @@ from nonebot.adapters.onebot.v11 import (
     Bot, Message, MessageEvent, MessageSegment, GroupMessageEvent, unescape, PokeNotifyEvent)
 from typing import List, Optional, Type, Tuple, Dict
 from nonebot.log import logger
-from nonebot.params import Depends
+from PIL import Image
+# from nonebot.params import Depends
 from .data_source import yishijie, huoqu, send_forward_msg, current_path
-from nonebot_plugin_imageutils import (Text2Image, text2image, BuildImage)
-from io import BytesIO
-from .utils import UserInfo
+# from nonebot_plugin_imageutils import (Text2Image, text2image, BuildImage)
+import os
+# from .utils import UserInfo
 from nonebot.adapters.onebot.v11.helpers import HandleCancellation
 #from nonebot_plugin_txt2img import Txt2Img
 
@@ -99,6 +106,34 @@ def _check(event: PokeNotifyEvent):
 
 
 戳一戳 = on_notice(rule=_check)
+
+def _zhiri(event: GroupMessageEvent):
+    return event.group_id == 747416482
+
+值日表 = on_fullmatch("值日表",rule=_zhiri,priority=20)
+
+@值日表.handle()
+async def _():
+    def is_week_file(周数):
+        """检查给定路径下是否存在PNG文件"""
+        if os.path.exists("current_path"+"值日表"+f"week_{周数}.png"):
+            return True
+        else:
+            return False
+    
+    today = datetime.date.today()
+    feb_27 = datetime.date(2023, 2, 27)
+    # breakpoint()
+    week_num = (today - feb_27).days // 7 +1
+    if is_week_file(week_num):
+        await 值日表.send(MessageSegment.image(file=f"{current_path}值日表/"+f"week_{week_num}.png"))
+        return
+    ls = ["张浩翔","邓长成","尹启河","王伟宁","周正南","赵琳淞","姜明洋","韩怀煜"]
+    newls = random.sample(ls, 5)
+    template_to_pic(current_path+"html","table.html",{"week_num":week_num,"ls":newls})
+
+    
+    # await 值日表.send(''.join(["\n" + '星期' + str(i+1) + "  "+newls[i] for i in range(5)]))
 
 
 渣男 = on_command("渣男语录", priority=20)
@@ -294,72 +329,72 @@ async def get_pixivimg_url(pid:int):
 
 
 
-def userinfo(event: MessageEvent):
-    def _is_at_me_seg(segment: MessageSegment):
-        return segment.type == "at" and str(segment.data.get("qq", "")) == str(
-            event.self_id
-        )
+# def userinfo(event: MessageEvent):
+#     def _is_at_me_seg(segment: MessageSegment):
+#         return segment.type == "at" and str(segment.data.get("qq", "")) == str(
+#             event.self_id
+#         )
 
-    msg: Message = event.get_message()
+#     msg: Message = event.get_message()
 
-    if event.to_me:
-        raw_msg = event.original_message
-        i = -1
-        last_msg_seg = raw_msg[i]
-        if (
-            last_msg_seg.type == "text"
-            and not last_msg_seg.data["text"].strip()
-            and len(raw_msg) >= 2
-        ):
-            i -= 1
-            last_msg_seg = raw_msg[i]
-        if _is_at_me_seg(last_msg_seg):
-            msg.append(last_msg_seg)
+#     if event.to_me:
+#         raw_msg = event.original_message
+#         i = -1
+#         last_msg_seg = raw_msg[i]
+#         if (
+#             last_msg_seg.type == "text"
+#             and not last_msg_seg.data["text"].strip()
+#             and len(raw_msg) >= 2
+#         ):
+#             i -= 1
+#             last_msg_seg = raw_msg[i]
+#         if _is_at_me_seg(last_msg_seg):
+#             msg.append(last_msg_seg)
 
-    users: List[UserInfo] = []
-    args: List[str] = []
+#     users: List[UserInfo] = []
+#     args: List[str] = []
 
-    if event.reply:
-        for img in event.reply.message["image"]:
-            users.append(UserInfo(img_url=str(img.data.get("url", ""))))
+#     if event.reply:
+#         for img in event.reply.message["image"]:
+#             users.append(UserInfo(img_url=str(img.data.get("url", ""))))
 
-    for msg_seg in msg:
-        if msg_seg.type == "at":
-            users.append(
-                UserInfo(
-                    qq=str(msg_seg.data.get("qq", "")),
-                    group=str(event.group_id)
-                    if isinstance(event, GroupMessageEvent)
-                    else "",
-                )
-            )
-        elif msg_seg.type == "image":
-            users.append(UserInfo(img_url=str(
-                msg_seg.data.get("url", ""))))
-        elif msg_seg.type == "text":
-            raw_text = str(msg_seg)
-            try:
-                texts = shlex.split(raw_text)
-            except:
-                texts = raw_text.split()
-            for text in texts:
-                if is_qq(text):
-                    users.append(UserInfo(qq=text))
-                elif text == "自己":
-                    users.append(
-                        UserInfo(
-                            qq=str(event.user_id),
-                            group=str(event.group_id)
-                            if isinstance(event, GroupMessageEvent)
-                            else "",
-                        )
-                    )
-                else:
-                    text = unescape(text).strip()
-                    if text:
-                        args.append(text)
-    sender = UserInfo(qq=str(event.user_id))
-    return {"sender": sender, "users": users, "args": args}
+#     for msg_seg in msg:
+#         if msg_seg.type == "at":
+#             users.append(
+#                 UserInfo(
+#                     qq=str(msg_seg.data.get("qq", "")),
+#                     group=str(event.group_id)
+#                     if isinstance(event, GroupMessageEvent)
+#                     else "",
+#                 )
+#             )
+#         elif msg_seg.type == "image":
+#             users.append(UserInfo(img_url=str(
+#                 msg_seg.data.get("url", ""))))
+#         elif msg_seg.type == "text":
+#             raw_text = str(msg_seg)
+#             try:
+#                 texts = shlex.split(raw_text)
+#             except:
+#                 texts = raw_text.split()
+#             for text in texts:
+#                 if is_qq(text):
+#                     users.append(UserInfo(qq=text))
+#                 elif text == "自己":
+#                     users.append(
+#                         UserInfo(
+#                             qq=str(event.user_id),
+#                             group=str(event.group_id)
+#                             if isinstance(event, GroupMessageEvent)
+#                             else "",
+#                         )
+#                     )
+#                 else:
+#                     text = unescape(text).strip()
+#                     if text:
+#                         args.append(text)
+#     sender = UserInfo(qq=str(event.user_id))
+#     return {"sender": sender, "users": users, "args": args}
 
 
 class Command:
@@ -584,11 +619,11 @@ class Command:
 #         await chushou.finish("小学渣无法为你转生哦~请重试")
 
 
-def txt_to_img(text: str):
-    img = text2image(text, max_width=1000)
-    output = BytesIO()
-    img.save(output, format="png")
-    return output
+# def txt_to_img(text: str):
+#     img = text2image(text, max_width=1000)
+#     output = BytesIO()
+#     img.save(output, format="png")
+#     return output
 
 
 # class UserInfo:
@@ -816,12 +851,14 @@ def is_qq(msg: str):
 #    except Exception:
 #        await huoqu()
 #        await yishi.finish("小真寻暂时查不到哦~")
-def Sender(sender: UserInfo):
-    async def dependency(bot: Bot):
-        await get_user_info(bot, sender)
-        await download_image(sender)
-        return sender
-    return Depends(dependency)
+
+
+# def Sender(sender: UserInfo):
+#     async def dependency(bot: Bot):
+#         await get_user_info(bot, sender)
+#         await download_image(sender)
+#         return sender
+#     return Depends(dependency)
 
 
 async def download_url(url: str) -> bytes:
@@ -846,29 +883,29 @@ async def download_avatar(user_id: str) -> bytes:
     return data
 
 
-async def download_image(user: UserInfo):
-    img = None
-    if user.qq:
-        img = await download_avatar(user.qq)
-    elif user.img_url:
-        img = await download_url(user.img_url)
+# async def download_image(user: UserInfo):
+#     img = None
+#     if user.qq:
+#         img = await download_avatar(user.qq)
+#     elif user.img_url:
+#         img = await download_url(user.img_url)
 
-    if img:
-        user.img = BuildImage.open(BytesIO(img))
+#     if img:
+#         user.img = BuildImage.open(BytesIO(img))
 
 
-async def get_user_info(bot: Bot, user: UserInfo):
-    if not user.qq:
-        return
+# async def get_user_info(bot: Bot, user: UserInfo):
+#     if not user.qq:
+#         return
 
-    if user.group:
-        info = await bot.get_group_member_info(
-            group_id=int(user.group), user_id=int(user.qq)
-        )
-        user.name = info.get("card", "") or info.get("nickname", "")
-        user.gender = info.get("sex", "")
-    else:
-        info = await bot.get_stranger_info(user_id=int(user.qq))
-        user.name = info.get("nickname", "")
-        user.gender = info.get("sex", "")
-    return user
+#     if user.group:
+#         info = await bot.get_group_member_info(
+#             group_id=int(user.group), user_id=int(user.qq)
+#         )
+#         user.name = info.get("card", "") or info.get("nickname", "")
+#         user.gender = info.get("sex", "")
+#     else:
+#         info = await bot.get_stranger_info(user_id=int(user.qq))
+#         user.name = info.get("nickname", "")
+#         user.gender = info.get("sex", "")
+#     return user

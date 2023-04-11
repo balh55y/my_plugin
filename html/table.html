@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>班级值日表</title>
+
+    <!-- 定义样式 -->
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      th,
+      td {
+        padding: 12px;
+        text-align: center;
+        border: 1px solid #ddd;
+      }
+
+      th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+      }
+
+      .header {
+        font-size: 24px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- 定义标题 -->
+    <h1 class="header">班级值日表</h1>
+
+    <!-- 定义日期 -->
+    <table>
+      <thead>
+        <tr>
+          {% for date in dates %}
+          <th>{{ date.strftime("%m/%d") }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+
+      <!-- 定义成员 -->
+      <tbody>
+        {% for member in members %}
+        <tr>
+          <td>{{ member }}</td>
+
+          <!-- 填写值日信息 -->
+          {% for date in dates %}
+          <td>{{ schedule[date.strftime("%m/%d")][member] }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>
