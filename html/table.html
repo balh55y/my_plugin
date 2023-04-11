@@ -1,62 +1,66 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
+
+<head>
     <meta charset="utf-8" />
-    <title>班级值日表</title>
+    <title>244第{{week_num}}周寝室值日表</title>
 
     <!-- 定义样式 -->
     <style>
-      table {
-        border-collapse: collapse;
-        width: 100%;
-      }
+        table {
+                margin: 0 auto;
+            border-collapse: collapse;
+        }
 
-      th,
-      td {
-        padding: 12px;
-        text-align: center;
-        border: 1px solid #ddd;
-      }
+        thead {
+            background-color: #f2f2f2;
+        }
 
-      th {
-        background-color: #f2f2f2;
-        font-weight: bold;
-      }
+        th,
+        td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+            font-family: Arial, sans-serif;
+        }
 
-      .header {
-        font-size: 24px;
-        font-weight: bold;
-      }
+        th {
+            font-weight: bold;
+        }
+        
+        .header {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
     </style>
-  </head>
+</head>
 
-  <body>
+<body>
     <!-- 定义标题 -->
-    <h1 class="header">班级值日表</h1>
+    <h1 class="header">244第{{week_num}}周寝室值日表</h1>
 
     <!-- 定义日期 -->
     <table>
-      <thead>
-        <tr>
-          {% for date in dates %}
-          <th>{{ date.strftime("%m/%d") }}</th>
-          {% endfor %}
-        </tr>
-      </thead>
+        <thead>
+            <tr>
+                <th>周一</th>
+                <th>周二</th>
+                <th>周三</th>
+                <th>周四</th>
+                <th>周五</th>
+            </tr>
+        </thead>
 
-      <!-- 定义成员 -->
-      <tbody>
-        {% for member in members %}
-        <tr>
-          <td>{{ member }}</td>
-
-          <!-- 填写值日信息 -->
-          {% for date in dates %}
-          <td>{{ schedule[date.strftime("%m/%d")][member] }}</td>
-          {% endfor %}
-        </tr>
-        {% endfor %}
-      </tbody>
+        <!-- 定义成员 -->
+        <tbody>
+            <tr>
+                {% for name in names %}
+                <td>{{name}}</td>
+                {% endfor %}
+            </tr>
+        </tbody>
     </table>
-  </body>
+</body>
+
 </html>

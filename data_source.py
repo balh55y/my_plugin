@@ -11,7 +11,7 @@ from nonebot.adapters.onebot.v11 import (
 url = 'https://shindanmaker.com/'
 
 dir_path = Path(__file__).parent
-current_path = str(dir_path.absolute()) + "/"
+current_path = str(dir_path.absolute())
 TEXT_TOO_LONG = "文字太长了哦，改短点再试吧~"
 NAME_TOO_LONG = "名字太长了哦，改短点再试吧~"
 REQUIRE_NAME = "找不到名字，加上名字再试吧~"
@@ -34,8 +34,8 @@ async def huoqu():
     y = re.compile(r'_session=(.*?) for .shindanmaker.com').findall(a)[0]
     cookie = '_session=' + y + ';' + 'name=' + x
     # 写入token
-    filename = current_path + 'token.txt'
-    COOKIE = current_path + "COOKIE.txt"
+    filename = Path(current_path) / 'token.txt'
+    COOKIE = Path(current_path) / "COOKIE.txt"
     with open(filename, 'w') as file_object:
         file_object.write(token)
         file_object.close()
@@ -47,8 +47,8 @@ async def huoqu():
 
 # 异世界转生
 async def yishijie(id, net):
-    tr = open(current_path + "token.txt", 'r')
-    fr = open(current_path + "COOKIE.txt", 'r')
+    tr = open(Path(current_path) / "token.txt", 'r')
+    fr = open(Path(current_path) / "COOKIE.txt", 'r')
 
     cookie = fr.read()
     # print(cookie)
@@ -77,8 +77,8 @@ async def yishijie(id, net):
 
 # 今天是什么少女
 async def jintian(id):  #
-    tr = open(current_path + "token.txt", 'r')
-    fr = open(current_path + "COOKIE.txt", 'r')
+    tr = open(Path(current_path) / "token.txt", 'r')
+    fr = open(Path(current_path) / "COOKIE.txt", 'r')
     cookie = fr.read()
     token = tr.read()
     tr.close()
@@ -102,8 +102,8 @@ async def jintian(id):  #
 
 # 卖萌
 async def maimeng(id):
-    tr = open(current_path + "token.txt", 'r')
-    fr = open(current_path + "COOKIE.txt", 'r')
+    tr = open(Path(current_path) / "token.txt", 'r')
+    fr = open(Path(current_path) / "COOKIE.txt", 'r')
     cookie = fr.read()
     token = tr.read()
     tr.close()
@@ -128,8 +128,8 @@ async def maimeng(id):
 
 # 抽老婆
 async def laopo(id):
-    tr = open(current_path + "token.txt", 'r')
-    fr = open(current_path + "COOKIE.txt", 'r')
+    tr = open(Path(current_path) / "token.txt", 'r')
+    fr = open(Path(current_path) / "COOKIE.txt", 'r')
     cookie = fr.read()
     token = tr.read()
     tr.close()

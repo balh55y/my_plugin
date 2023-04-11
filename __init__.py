@@ -1,5 +1,6 @@
 from ast import Try
 import datetime
+from pathlib import Path
 from nonebot import on_command, on_fullmatch, on_regex, on_endswith, on_notice
 from nonebot.params import CommandArg, EventPlainText, RegexMatched
 from nonebot.typing import T_State
@@ -78,7 +79,7 @@ from nonebot.adapters.onebot.v11.helpers import HandleCancellation
 #    "抽老婆", aliases={"抽老婆"}, priority=5, block=True
 # )
 
-with open(current_path+"User Illust.txt", "r", encoding="utf-8") as f:
+with open(Path(current_path) / "User Illust.txt", "r", encoding="utf-8") as f:
     lines = f.read().splitlines()[1:-1]    # 读取文件内容并去除首尾空行
     梦夏urls = list(filter(bool, lines))       # 过滤掉空行，并转为list
 
@@ -108,31 +109,56 @@ def _check(event: PokeNotifyEvent):
 戳一戳 = on_notice(rule=_check)
 
 def _zhiri(event: GroupMessageEvent):
-    return event.group_id == 747416482
+    return event.group_id == 115494820
 
-值日表 = on_fullmatch("值日表",rule=_zhiri,priority=20)
+值日表 = on_command("值日表",rule=_zhiri,priority=20)
+下周值日表 = on_command("下周值日表",rule=_zhiri,priority=20)
+上周值日表 = on_command("上周值日表",rule=_zhiri,priority=20)
 
 @值日表.handle()
-async def _():
-    def is_week_file(周数):
-        """检查给定路径下是否存在PNG文件"""
-        if os.path.exists("current_path"+"值日表"+f"week_{周数}.png"):
-            return True
-        else:
-            return False
-    
+async def _(bot: Bot,event:GroupMessageEvent):
+    # breakpoint()
+    week_num = week_num_auto()
+    await week_send(bot,week_num,event)
+
+@下周值日表.handle()
+async def _(bot: Bot,event:GroupMessageEvent):
+    # breakpoint()
+    week_num = week_num_auto(1)
+    await week_send(bot,week_num,event)
+
+@上周值日表.handle()
+async def _(bot: Bot,event:GroupMessageEvent):
+    # breakpoint()
+    week_num = week_num_auto(-1)
+    await week_send(bot,week_num,event)
+
+async def week_send(bot:Bot,week_num:int,event:GroupMessageEvent):
+    if is_week_file(week_num):
+        await bot.send(event,MessageSegment.image(Path(current_path) / "值日表" / f"week_{week_num}.png"))
+        return
+    else:
+        ls = ["张浩翔","邓章程","尹齐河","王伟宁","周正南","赵琳淞","姜铭洋","韩怀煜"]
+        newls = random.sample(ls, 5)
+        img = await template_to_pic(Path(current_path) / "html","table.html",{"week_num":week_num,"names":newls})
+        with open(Path(current_path) / '值日表' / f'week_{week_num}.png', 'wb') as f:
+            f.write(img)
+        await bot.send(event,MessageSegment.image(img))
+
+def week_num_auto(i:int=0)->int:
     today = datetime.date.today()
     feb_27 = datetime.date(2023, 2, 27)
-    # breakpoint()
-    week_num = (today - feb_27).days // 7 +1
-    if is_week_file(week_num):
-        await 值日表.send(MessageSegment.image(file=f"{current_path}值日表/"+f"week_{week_num}.png"))
-        return
-    ls = ["张浩翔","邓长成","尹启河","王伟宁","周正南","赵琳淞","姜明洋","韩怀煜"]
-    newls = random.sample(ls, 5)
-    template_to_pic(current_path+"html","table.html",{"week_num":week_num,"ls":newls})
+    week_num = (today - feb_27).days // 7 + 1 + i
+    return week_num
 
-    
+def is_week_file(周数)->bool:
+        """检查给定路径下是否存在now_week文件"""
+        路径 = Path(current_path) / "值日表" /f"week_{周数}.png"
+        print(路径)
+        if os.path.exists(路径):
+            return True
+        else:
+            return False  
     # await 值日表.send(''.join(["\n" + '星期' + str(i+1) + "  "+newls[i] for i in range(5)]))
 
 
