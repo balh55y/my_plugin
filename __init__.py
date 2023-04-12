@@ -5,10 +5,9 @@ from nonebot import on_command, on_fullmatch, on_regex, on_endswith, on_notice
 from nonebot.params import CommandArg, EventPlainText, RegexMatched
 from nonebot.typing import T_State
 from nonebot import require
+
 require("nonebot_plugin_htmlrender")
-from nonebot_plugin_htmlrender import (
-    template_to_pic
-)
+from nonebot_plugin_htmlrender import template_to_pic
 from nonebot.matcher import Matcher
 from nonebot.utils import run_sync
 from nonebot.permission import SUPERUSER
@@ -20,17 +19,28 @@ import re
 import json
 import random
 from nonebot.adapters.onebot.v11 import (
-    Bot, Message, MessageEvent, MessageSegment, GroupMessageEvent, unescape, PokeNotifyEvent)
+    Bot,
+    Message,
+    MessageEvent,
+    MessageSegment,
+    GroupMessageEvent,
+    unescape,
+    PokeNotifyEvent,
+)
 from typing import List, Optional, Type, Tuple, Dict
 from nonebot.log import logger
 from PIL import Image
+
 # from nonebot.params import Depends
 from .data_source import yishijie, huoqu, send_forward_msg, current_path
+
 # from nonebot_plugin_imageutils import (Text2Image, text2image, BuildImage)
 import os
+
 # from .utils import UserInfo
 from nonebot.adapters.onebot.v11.helpers import HandleCancellation
-#from nonebot_plugin_txt2img import Txt2Img
+
+# from nonebot_plugin_txt2img import Txt2Img
 
 # yishi = on_command(
 #     "异世界转生", aliases={"异世界转生"}, priority=5, block=True
@@ -80,15 +90,16 @@ from nonebot.adapters.onebot.v11.helpers import HandleCancellation
 # )
 
 with open(Path(current_path) / "User Illust.txt", "r", encoding="utf-8") as f:
-    lines = f.read().splitlines()[1:-1]    # 读取文件内容并去除首尾空行
-    梦夏urls = list(filter(bool, lines))       # 过滤掉空行，并转为list
+    lines = f.read().splitlines()[1:-1]  # 读取文件内容并去除首尾空行
+    梦夏urls = list(filter(bool, lines))  # 过滤掉空行，并转为list
 
 壁纸 = on_command("来张壁纸", priority=20)
 
 拼音 = on_regex(r"(^拼音.+)|(.+拼音$)", priority=1)
 
 github_img = on_regex(
-    r"github\.com\/[a-zA-Z0-9-]{1,39}\/[a-zA-Z0-9_-]{1,100}", priority=1)
+    r"github\.com\/[a-zA-Z0-9-]{1,39}\/[a-zA-Z0-9_-]{1,100}", priority=1
+)
 
 腿子 = on_command("来张腿子", priority=20)
 
@@ -102,89 +113,110 @@ send_img = on_command("send-img", priority=20)
 
 call_api = on_command("/api", permission=SUPERUSER)
 
+
 def _check(event: PokeNotifyEvent):
     return event.target_id == event.self_id
 
 
 戳一戳 = on_notice(rule=_check)
 
+
 def _zhiri(event: GroupMessageEvent):
     return event.group_id == 115494820
 
-值日表 = on_command("值日表",rule=_zhiri,priority=20)
-下周值日表 = on_command("下周值日表",rule=_zhiri,priority=20)
-上周值日表 = on_command("上周值日表",rule=_zhiri,priority=20)
+
+值日表 = on_command("值日表", rule=_zhiri, priority=20)
+下周值日表 = on_command("下周值日表", rule=_zhiri, priority=20)
+上周值日表 = on_command("上周值日表", rule=_zhiri, priority=20)
+
 
 @值日表.handle()
-async def _(bot: Bot,event:GroupMessageEvent):
+async def _(bot: Bot, event: GroupMessageEvent):
     # breakpoint()
     week_num = week_num_auto()
-    await week_send(bot,week_num,event)
+    await week_send(bot, week_num, event)
+
 
 @下周值日表.handle()
-async def _(bot: Bot,event:GroupMessageEvent):
+async def _(bot: Bot, event: GroupMessageEvent):
     # breakpoint()
     week_num = week_num_auto(1)
-    await week_send(bot,week_num,event)
+    await week_send(bot, week_num, event)
+
 
 @上周值日表.handle()
-async def _(bot: Bot,event:GroupMessageEvent):
+async def _(bot: Bot, event: GroupMessageEvent):
     # breakpoint()
     week_num = week_num_auto(-1)
-    await week_send(bot,week_num,event)
+    await week_send(bot, week_num, event)
 
-async def week_send(bot:Bot,week_num:int,event:GroupMessageEvent):
+
+async def week_send(bot: Bot, week_num: int, event: GroupMessageEvent):
     if is_week_file(week_num):
-        await bot.send(event,MessageSegment.image(Path(current_path) / "值日表" / f"week_{week_num}.png"))
+        await bot.send(
+            event,
+            MessageSegment.image(Path(current_path) / "值日表" / f"week_{week_num}.png"),
+        )
         return
     else:
-        ls = ["张浩翔","邓章程","尹齐河","王伟宁","周正南","赵琳淞","姜铭洋","韩怀煜"]
+        ls = ["张浩翔", "邓章程", "尹齐河", "王伟宁", "周正南", "赵琳淞", "姜铭洋", "韩怀煜"]
         newls = random.sample(ls, 5)
-        img = await template_to_pic(Path(current_path) / "html","table.html",{"week_num":week_num,"names":newls})
-        with open(Path(current_path) / '值日表' / f'week_{week_num}.png', 'wb') as f:
+        img = await template_to_pic(
+            Path(current_path) / "html",
+            "table.html",
+            {"week_num": week_num, "names": newls},
+        )
+        with open(Path(current_path) / "值日表" / f"week_{week_num}.png", "wb") as f:
             f.write(img)
-        await bot.send(event,MessageSegment.image(img))
+        await bot.send(event, MessageSegment.image(img))
 
-def week_num_auto(i:int=0)->int:
+
+def week_num_auto(i: int = 0) -> int:
     today = datetime.date.today()
     feb_27 = datetime.date(2023, 2, 27)
     week_num = (today - feb_27).days // 7 + 1 + i
     return week_num
 
-def is_week_file(周数)->bool:
-        """检查给定路径下是否存在now_week文件"""
-        路径 = Path(current_path) / "值日表" /f"week_{周数}.png"
-        print(路径)
-        if os.path.exists(路径):
-            return True
-        else:
-            return False  
-    # await 值日表.send(''.join(["\n" + '星期' + str(i+1) + "  "+newls[i] for i in range(5)]))
+
+def is_week_file(周数) -> bool:
+    """检查给定路径下是否存在now_week文件"""
+    路径 = Path(current_path) / "值日表" / f"week_{周数}.png"
+    print(路径)
+    if os.path.exists(路径):
+        return True
+    else:
+        return False
+
+
+# await 值日表.send(''.join(["\n" + '星期' + str(i+1) + "  "+newls[i] for i in range(5)]))
 
 
 渣男 = on_command("渣男语录", priority=20)
 
 biang = on_command("biang", priority=20)
 
+
 @biang.handle()
-async def _(bot: Bot,event: MessageEvent,args: Message = CommandArg()):
+async def _(bot: Bot, event: MessageEvent, args: Message = CommandArg()):
     text = args.extract_plain_text().strip()
-    text = text.replace(" ","+")
+    text = text.replace(" ", "+")
     try:
-        await biang.send(str(eval(text)/1000))
+        await biang.send(str(eval(text) / 1000))
     except Exception as e:
         logger.warning(str(e))
 
 
 @小作文.handle()
-async def _(matcher:Matcher,args:Message=CommandArg()):
+async def _(matcher: Matcher, args: Message = CommandArg()):
     text = args.extract_plain_text().strip()
     text_list = text.split()
     try:
-        if len(text_list) == 2 :
-            arg0,arg1 = text_list
+        if len(text_list) == 2:
+            arg0, arg1 = text_list
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"https://zunslib.cn/api/public/ai?IferAction=article&a={arg0}&b={arg1}")
+                resp = await client.get(
+                    f"https://zunslib.cn/api/public/ai?IferAction=article&a={arg0}&b={arg1}"
+                )
                 res_data = json.loads(resp.text)
                 await 小作文.send(res_data["text"])
         else:
@@ -193,9 +225,8 @@ async def _(matcher:Matcher,args:Message=CommandArg()):
         logger.warning(str(e))
 
 
-
 @send_img.handle()
-async def _(bot: Bot,event: MessageEvent,arg: Message = CommandArg()):
+async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
     text = arg.extract_plain_text().strip()
     pattern = r"https://i\.pximg\.net/img-original/img/\d+/\d+/\d+/\d+/\d+/\d+/"
     pixiv_re = r"^https:\/\/www\.pixiv\.net\/artworks\/(\d+)$"
@@ -203,14 +234,27 @@ async def _(bot: Bot,event: MessageEvent,arg: Message = CommandArg()):
         if re.search(pattern, text):
             new_url = text.replace("i.pximg.net", "pixiv.balh5.workers.dev")
             try:
-                await send_forward_msg(bot, event, "学渣", bot.self_id, [MessageSegment.image(file=new_url)])
+                await send_forward_msg(
+                    bot, event, "学渣", bot.self_id, [MessageSegment.image(file=new_url)]
+                )
             except Exception as e:
                 logger.warning(e)
         elif pid := re.search(pixiv_re, text).group(1):
             try:
                 url_list = await get_pixivimg_url(pid)
                 if url_list:
-                    await send_forward_msg(bot, event, "学渣", bot.self_id, [MessageSegment.image(file=i.replace("i.pximg.net", "pixiv.balh5.workers.dev")) for i in url_list])
+                    await send_forward_msg(
+                        bot,
+                        event,
+                        "学渣",
+                        bot.self_id,
+                        [
+                            MessageSegment.image(
+                                file=i.replace("i.pximg.net", "pixiv.balh5.workers.dev")
+                            )
+                            for i in url_list
+                        ],
+                    )
             except Exception as e:
                 logger.warning(e)
         else:
@@ -218,8 +262,6 @@ async def _(bot: Bot,event: MessageEvent,arg: Message = CommandArg()):
                 await send_img.send(MessageSegment.image(file=text))
             except Exception as e:
                 logger.warning(e)
-
-
 
 
 @call_api.handle()
@@ -239,7 +281,8 @@ async def _():
             resp = await client.get("http://ovooa.com/API/qing/api.php", timeout=5)
         await 渣男.send(resp.text)
     except Exception as e:
-        logger.warning("渣男error:"+e)
+        logger.warning("渣男error:" + e)
+
 
 @壁纸.handle()
 async def _(bot: Bot, msg: Message = CommandArg()):
@@ -251,7 +294,10 @@ async def _(bot: Bot, msg: Message = CommandArg()):
                 url = f"https://ovooa.com/API/bizhi/api.php?type=image&msg={msg}"
                 await 壁纸.send(MessageSegment.image(file=url))
         else:
-            await 壁纸.send("请在命令后添加正确的参数\n"+"1是美女壁纸2是动漫壁纸3是风景壁纸4是游戏壁纸5是文字壁纸6是视觉壁纸7是情感壁纸8是设计壁纸9是明星壁纸10是物语壁纸")
+            await 壁纸.send(
+                "请在命令后添加正确的参数\n"
+                + "1是美女壁纸2是动漫壁纸3是风景壁纸4是游戏壁纸5是文字壁纸6是视觉壁纸7是情感壁纸8是设计壁纸9是明星壁纸10是物语壁纸"
+            )
     except Exception as e:
         logger.warning(e)
 
@@ -266,9 +312,13 @@ async def _():
         async with httpx.AsyncClient() as client:
             resp = await client.get("https://api.xunkong.cc/v1/wallpaper/random")
             js = json.loads(resp.text)
-            await 原神.send(f"标题:{js['data']['title']}\n作者:{js['data']['author']}\n"+MessageSegment.image(file=js['data']['url']))
+            await 原神.send(
+                f"标题:{js['data']['title']}\n作者:{js['data']['author']}\n"
+                + MessageSegment.image(file=js["data"]["url"])
+            )
     except Exception as e:
         logger.warning(e)
+
 
 @梦夏.handle()
 async def _():
@@ -276,13 +326,15 @@ async def _():
         await 梦夏.send(MessageSegment.image(file=random.choice(梦夏urls)))
     except Exception as e:
         logger.warning(e)
-        await 梦夏.send("出错了:\n"+e)
+        await 梦夏.send("出错了:\n" + e)
 
 
 @腿子.handle()
 async def _(bot: Bot):
     try:
-        await 腿子.send(MessageSegment.image(file="http://ovooa.com/API/meizi/api.php?type=image"))
+        await 腿子.send(
+            MessageSegment.image(file="http://ovooa.com/API/meizi/api.php?type=image")
+        )
     except Exception as e:
         logger.warning(e)
 
@@ -295,7 +347,8 @@ async def _(bot: Bot, msg: Message = RegexMatched()):
     msg = msg.strip()
     print(msg)
     msg = re.search(
-        r"github.com\/[a-zA-Z0-9-]{1,39}\/[a-zA-Z0-9_-]{1,100}", msg).group()
+        r"github.com\/[a-zA-Z0-9-]{1,39}\/[a-zA-Z0-9_-]{1,100}", msg
+    ).group()
     res = msg.split("/")
     user, repo = res[1], res[2]
     imgurl = f"{api}/{id}/{user}/{repo}"
@@ -310,7 +363,7 @@ async def _(bot: Bot, msg: Message = RegexMatched()):
     if text.index("拼音") == 0:
         text = text[2:]
     else:
-        text = text[:text.rindex("拼音")]
+        text = text[: text.rindex("拼音")]
     print(msg)
     pinyin += text
     async with httpx.AsyncClient() as client:
@@ -324,7 +377,7 @@ async def _(bot: Bot, msg: Message = RegexMatched()):
 @戳一戳.handle()
 async def _(bot: Bot, event: PokeNotifyEvent):
     print(event)
-    txt_ls=["功德","缺德"]
+    txt_ls = ["功德", "缺德"]
     try:
         if event.group_id:
             print("群聊")
@@ -338,11 +391,12 @@ async def _(bot: Bot, event: PokeNotifyEvent):
             info = await bot.get_stranger_info(user_id=int(event.user_id))
             name = info.get("nickname", "")
             msg = f"{name}戳了我,{random.choice(txt_ls)}+1"
-            await bot.send_private_msg(user_id=event.user_id,message=msg)
+            await bot.send_private_msg(user_id=event.user_id, message=msg)
     except Exception as e:
-        print('未知错误 %s' % e)
+        print("未知错误 %s" % e)
 
-async def get_pixivimg_url(pid:int):
+
+async def get_pixivimg_url(pid: int):
     url = f"https://api.obfs.dev/api/pixiv/illust?id={pid}"
     async with httpx.AsyncClient() as client:
         resp = await client.get(url)
@@ -352,7 +406,6 @@ async def get_pixivimg_url(pid:int):
                 return [i["image_urls"]["original"] for i in js["illust"]["meta_pages"]]
             elif page == 0:
                 return [js["illust"]["meta_single_page"]["original_image_url"]]
-
 
 
 # def userinfo(event: MessageEvent):
@@ -424,7 +477,6 @@ async def get_pixivimg_url(pid:int):
 
 
 class Command:
-
     @staticmethod
     def get_keywords(old_dict: dict, keywords: dict) -> dict:
         """
@@ -440,7 +492,9 @@ class Command:
         return new
 
     @staticmethod
-    def formatToCommand(cmd: str, sep: str = " ", kw=True, exe=False) -> Tuple[Tuple, Dict]:
+    def formatToCommand(
+        cmd: str, sep: str = " ", kw=True, exe=False
+    ) -> Tuple[Tuple, Dict]:
         """
         :param exe: 执行为Python对象，失败则为字符串
         :param kw: 将有等号的词语分出
@@ -505,18 +559,10 @@ class Command:
         :param blank: 转义%20为空格
         :return:
         """
-        escape_data = {
-            "&amp;": "&",
-            "&#91;": "[",
-            "&#93;": "]",
-            "&#44;": ","
-        }
+        escape_data = {"&amp;": "&", "&#91;": "[", "&#93;": "]", "&#44;": ","}
         for esd in escape_data.items():
             text = text.replace(esd[0], esd[1])
         return text.replace("%20", " " if blank else "%20")
-
-
-
 
 
 # ai画画
