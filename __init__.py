@@ -75,7 +75,7 @@ def _check(event: PokeNotifyEvent):
 
 
 def _zhiri(event: GroupMessageEvent):
-    return event.group_id == 115494820
+    return event.group_id == 115494820 or event.user_id == 2779375323
 
 
 值日表 = on_command("值日表", rule=_zhiri, priority=20)
@@ -84,40 +84,56 @@ def _zhiri(event: GroupMessageEvent):
 
 
 @值日表.handle()
-async def _(bot: Bot, event: GroupMessageEvent):
+async def _(bot: Bot, event: GroupMessageEvent , args: Message = CommandArg()):
     # breakpoint()
+    text = args.extract_plain_text().strip()
     week_num = week_num_auto()
-    await week_send(bot, week_num, event)
+    if text.isdigit() and int(text) in range(1, 10):
+        await week_send(bot, week_num, event,int(text))
+    else:
+        await week_send(bot, week_num, event)
 
 
 @下周值日表.handle()
-async def _(bot: Bot, event: GroupMessageEvent):
+async def _(bot: Bot, event: GroupMessageEvent,args: Message = CommandArg()):
     # breakpoint()
+    text = args.extract_plain_text().strip()
     week_num = week_num_auto(1)
-    await week_send(bot, week_num, event)
+    if text.isdigit() and int(text) in range(1, 10):
+        await week_send(bot, week_num, event,int(text))
+    else:
+        await week_send(bot, week_num, event)
 
 
 @上周值日表.handle()
-async def _(bot: Bot, event: GroupMessageEvent):
+async def _(bot: Bot, event: GroupMessageEvent,args: Message = CommandArg()):
     # breakpoint()
+    text = args.extract_plain_text().strip()
     week_num = week_num_auto(-1)
-    await week_send(bot, week_num, event)
+    if text.isdigit() and int(text) in range(1, 10):
+        await week_send(bot, week_num, event,int(text))
+    else:
+        await week_send(bot, week_num, event)
 
 
-async def week_send(bot: Bot, week_num: int, event: GroupMessageEvent):
+async def week_send(bot: Bot, week_num: int, event: GroupMessageEvent,num:int=5):
+    if num > 7:
+        num = 7
+    week_ls = ["周一","周二","周三","周四","周五","周六","周日"]
+    num_ls = week_ls[:num]
     if is_week_file(week_num):
         await bot.send(
             event,
-            MessageSegment.image(Path(current_path) / "值日表" / f"week_{week_num}.png"),
+            MessageSegment.image(Path(currrent_path) / "值日表" / f"week_{week_num}.png"),
         )
         return
     else:
         ls = ["张浩翔", "邓章程", "尹齐河", "王伟宁", "周正南", "赵琳淞", "姜铭洋", "韩怀煜"]
-        newls = random.sample(ls, 5)
+        newls = random.sample(ls, num)
         img = await template_to_pic(
             Path(current_path) / "html",
             "table.html",
-            {"week_num": week_num, "names": newls},
+            {"week_num": week_num, "names": newls, "num_ls": num_ls},
         )
         with open(Path(current_path) / "值日表" / f"week_{week_num}.png", "wb") as f:
             f.write(img)

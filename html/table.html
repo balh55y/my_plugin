@@ -8,7 +8,7 @@
     <!-- 定义样式 -->
     <style>
         table {
-                margin: 0 auto;
+            margin: 0 auto;
             border-collapse: collapse;
         }
 
@@ -18,7 +18,7 @@
 
         th,
         td {
-            padding: 12px;
+            padding: 10px;
             text-align: center;
             border: 1px solid #ddd;
             font-family: Arial, sans-serif;
@@ -44,11 +44,9 @@
     <table>
         <thead>
             <tr>
-                <th>周一</th>
-                <th>周二</th>
-                <th>周三</th>
-                <th>周四</th>
-                <th>周五</th>
+                {% for num in num_ls %}
+                <th>{{num}}</th>
+                {% endfor %}
             </tr>
         </thead>
 
