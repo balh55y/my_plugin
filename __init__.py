@@ -81,6 +81,7 @@ def _zhiri(event: GroupMessageEvent):
 值日表 = on_command("值日表", rule=_zhiri, priority=20)
 下周值日表 = on_command("下周值日表", rule=_zhiri, priority=20)
 上周值日表 = on_command("上周值日表", rule=_zhiri, priority=20)
+删除值日表 = on_command("删除值日表", rule=_zhiri, priority=20)
 
 
 @值日表.handle()
@@ -114,6 +115,17 @@ async def _(bot: Bot, event: GroupMessageEvent,args: Message = CommandArg()):
         await week_send(bot, week_num, event,int(text))
     else:
         await week_send(bot, week_num, event)
+
+@删除值日表.handle()
+async def _(bot: Bot, event: GroupMessageEvent,args: Message = CommandArg()):
+    # breakpoint()
+    text = args.extract_plain_text().strip()
+    if text.isdigit() and is_week_file(int(text)):
+        file_path = Path(current_path) / "值日表" / f"week_{text}.png"
+        os.remove(file_path)
+        await 删除值日表.send(f"已删除第{text}周值日表")
+    else:
+        await 删除值日表.send(f"没有第{text}周值日表")
 
 
 async def week_send(bot: Bot, week_num: int, event: GroupMessageEvent,num:int=5):
